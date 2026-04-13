@@ -1,4 +1,4 @@
-import {_decorator, Component, Input, input, Vec3, EventMouse} from 'cc'
+import {_decorator, Component, Input, input, Vec3, EventMouse, Animation} from 'cc'
 
 const {ccclass, property} = _decorator
 
@@ -6,6 +6,14 @@ export const BLOCK_SIZE = 40
 
 @ccclass('PlayerController')
 export class PlayerController extends Component {
+  /**
+   * Здесь мы добавили свойство с именем BodyAnim и разместили @property его выше.
+   * Этот синтаксис называется: Декоратор. @propertyДекоратор позволяет редактору определять
+   * тип BodyAnim компонента Animation и отображать его экспортированные свойства на панели Инспектора.
+   * */
+  @property(Animation)
+  BodyAnim: Animation = null
+
   // используется для определения, прыгает ли игрок
   private _startJump: boolean = false
   // количество шагов, которые игрок сделает в прыжке, должно быть 1 или 2. определяется тем, какая кнопка мыши нажата
@@ -66,25 +74,40 @@ export class PlayerController extends Component {
   }
 
   jumpByStep(step: number) {
-    // если игрок уже прыгает - ничего не делаем
     if (this._startJump) return
 
-    // помечаем, что игрок начал прыжок
-    this._startJump = true
-    // сохраняем количество шагов, которое должен пройти прыжок
-    this._jumpStep = step
-    // сбрасываем таймер текущего прыжка
-    this._curJumpTime = 0
-
+    this._startJump = true // помечаем, что игрок начал прыжок
+    this._jumpStep = step // сохраняем количество шагов, которое должен пройти прыжок
+    this._curJumpTime = 0 // сбрасываем таймер текущего прыжка
     // т.к прыжок должен завершиться за фиксированное время (_jumpTime), рассчитываем вертикальную скорость прыжка
     this._curJumpSpeed = (this._jumpStep * BLOCK_SIZE) / this._jumpTime
-
     // сохраняем текущую позицию ноды - она будет использоваться в расчётах движения
     this.node.getPosition(this._curPos)
-
     // вычисляем конечную позицию ноды, которая будет установлена после завершения прыжка
     Vec3.add(this._targetPos, this._curPos, new Vec3(this._jumpStep * BLOCK_SIZE, 0, 0))
+
+    this.#setJumpTime(step)
+
+    if (this.BodyAnim) {
+      if (step === 1) {
+        this.BodyAnim.play('oneStep');
+      } else if (step === 2) {
+        this.BodyAnim.play('twoStep');
+      }
+    }
   }
+
+  #setJumpTime = (step: number) => {
+    const clipName = (step == 1) ? 'oneStep' : 'twoStep'
+    console.group('↓---------clipName------↓')
+    console.log(step)
+    console.log(clipName)
+    console.log('↑---------------↑')
+    console.groupEnd()
+    const state = this.BodyAnim.getState(clipName)
+    this._jumpTime = state.duration
+  }
+
 }
 
 
