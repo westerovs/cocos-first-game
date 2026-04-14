@@ -33,36 +33,49 @@ export class PlayerController extends Component {
   private _deltaPos: Vec3 = new Vec3(0, 0, 0)
   // хранит конечную позицию игрока. когда прыжок завершается, используется напрямую, чтобы избежать накопления ошибок вычислений
   private _targetPos: Vec3 = new Vec3()
+  //  для записи количества шагов, пройденных игроком.
+  private _curMoveIndex: number = 0;
 
   start() {
-    input.on(Input.EventType.MOUSE_UP, this.onMouseUp, this)
+    // input.on(Input.EventType.MOUSE_UP, this.onMouseUp, this)
+  }
+
+  setInputActive(active: boolean) {
+    if (active) {
+      input.on(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+    } else {
+      input.off(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+    }
+  }
+
+  reset() {
+    this._curMoveIndex = 0;
+    this.node.getPosition(this._curPos);
+    this._targetPos.set(0,0,0);
   }
 
   update(deltaTime: number) {
     // выполняем логику только если игрок сейчас прыгает
     if (!this._startJump) return
-
     // накапливаем время прыжка
     this._curJumpTime += deltaTime
 
-    // проверяем, достигло ли время длительности прыжка
+    // [end] проверяем, достигло ли время длительности прыжка
     if (this._curJumpTime > this._jumpTime) {
-
       // когда прыжок завершён - устанавливаем позицию игрока в целевую точку
       this.node.setPosition(this._targetPos)
-
       // сбрасываем состояние прыжка
       this._startJump = false
-    } else {
+      this.onOnceJumpEnd()
+    }
+    // [tween]
+    else {
       // если прыжок ещё продолжается копируем текущую позицию ноды
       this.node.getPosition(this._curPos)
-
       // вычисляем смещение по X через deltaTime и скорость прыжка
       this._deltaPos.x = this._curJumpSpeed * deltaTime
-
       // прибавляем смещение к текущей позиции
       Vec3.add(this._curPos, this._curPos, this._deltaPos)
-
       // обновляем позицию игрока
       this.node.setPosition(this._curPos)
     }
@@ -80,7 +93,7 @@ export class PlayerController extends Component {
     this._jumpStep = step // сохраняем количество шагов, которое должен пройти прыжок
     this._curJumpTime = 0 // сбрасываем таймер текущего прыжка
     // т.к прыжок должен завершиться за фиксированное время (_jumpTime), рассчитываем вертикальную скорость прыжка
-    this._curJumpSpeed = (this._jumpStep * BLOCK_SIZE) / this._jumpTime
+    this._curJumpSpeed = this._jumpStep * BLOCK_SIZE / this._jumpTime
     // сохраняем текущую позицию ноды - она будет использоваться в расчётах движения
     this.node.getPosition(this._curPos)
     // вычисляем конечную позицию ноды, которая будет установлена после завершения прыжка
@@ -90,11 +103,17 @@ export class PlayerController extends Component {
 
     if (this.BodyAnim) {
       if (step === 1) {
-        this.BodyAnim.play('oneStep');
+        this.BodyAnim.play('oneStep')
       } else if (step === 2) {
-        this.BodyAnim.play('twoStep');
+        this.BodyAnim.play('twoStep')
       }
     }
+
+    this._curMoveIndex += step
+  }
+
+  onOnceJumpEnd() {
+    this.node.emit('JumpEnd', this._curMoveIndex);
   }
 
   #setJumpTime = (step: number) => {
@@ -107,7 +126,6 @@ export class PlayerController extends Component {
     const state = this.BodyAnim.getState(clipName)
     this._jumpTime = state.duration
   }
-
 }
 
 

@@ -1,7 +1,13 @@
-import {_decorator, CCInteger, Component, Prefab, Node, instantiate} from 'cc'
-import {BLOCK_SIZE} from './PlayerController'
+import {_decorator, CCInteger, Component, Prefab, Node, instantiate, Label, Vec3} from 'cc'
+import {BLOCK_SIZE, PlayerController} from './PlayerController'
 
 const {ccclass, property} = _decorator
+
+enum GameState {
+  GS_INIT,
+  GS_PLAYING,
+  GS_END,
+}
 
 enum BlockType {
   BT_NONE,
@@ -10,37 +16,85 @@ enum BlockType {
 
 @ccclass('GameManger')
 export class GameManger extends Component {
+  // References to the startMenu node.
+  @property({ type: Node })
+  public startMenu: Node | null = null;
+
+  //references to player
+  @property({ type: PlayerController })
+  public playerCtrl: PlayerController | null = null;
+
+  //references to UICanvas/Steps node.
+  @property({type: Label})
+  public stepsLabel: Label|null = null;
+
   @property({type: Prefab})
   public boxPrefab: Prefab | null = null
+
   @property({type: CCInteger})
   public roadLength: number = 50
+
   private _road: BlockType[] = []
 
   start() {
+    this.#setCurState(GameState.GS_INIT)
+    this.playerCtrl?.node.on('JumpEnd', this.onPlayerJumpEnd, this);
+  }
+
+  #init() {
+    console.log('-------- init')
+    //show the start menu
+    if (this.startMenu) {
+      this.startMenu.active = true
+    }
+
+    //generate the map
     this.generateRoad()
+
+    if (this.playerCtrl) {
+      //disable input
+      this.playerCtrl.setInputActive(false)
+
+      //reset player data.
+      this.playerCtrl.node.setPosition(Vec3.ZERO)
+      this.playerCtrl.reset()
+    }
   }
 
-  update(deltaTime: number) {
+  #setCurState (value: GameState) {
+    switch(value) {
+      case GameState.GS_INIT:
+        this.#init()
+        break;
+      case GameState.GS_PLAYING:
+        if (this.startMenu) {
+          this.startMenu.active = false;
+        }
 
+        //reset steps counter to 0
+        if (this.stepsLabel) {
+          this.stepsLabel.string = '0';
+        }
+
+        //enable user input after 0.1 second.
+        setTimeout(() => {
+          if (this.playerCtrl) {
+            this.playerCtrl.setInputActive(true);
+          }
+        }, 0.1);
+        break;
+      case GameState.GS_END:
+        console.log('GAME END')
+        break;
+    }
   }
 
-  spawnBlockByType(type: BlockType) {
-    if (!this.boxPrefab) {
-      return null
-    }
-
-    let block: Node | null = null
-    switch (type) {
-      case BlockType.BT_STONE:
-        block = instantiate(this.boxPrefab)
-        break
-    }
-
-    return block
+  onStartButton(event: Event, data: string) {
+    console.log('click click', data)
+    this.#setCurState(GameState.GS_PLAYING);
   }
 
   generateRoad() {
-
     this.node.removeAllChildren()
 
     this._road = []
@@ -61,6 +115,37 @@ export class GameManger extends Component {
         this.node.addChild(block)
         block.setPosition(j * BLOCK_SIZE, 0, 0)
       }
+    }
+  }
+
+  spawnBlockByType(type: BlockType) {
+    if (!this.boxPrefab) return null
+
+    let block: Node | null = null
+    switch (type) {
+      case BlockType.BT_STONE:
+        block = instantiate(this.boxPrefab)
+        break
+    }
+
+    return block
+  }
+
+  onPlayerJumpEnd(moveIndex: number) {
+    //update steps label.
+    if (this.stepsLabel) {
+      this.stepsLabel.string = '' + (moveIndex >= this.roadLength ? this.roadLength : moveIndex);
+    }
+    this.checkResult(moveIndex);
+  }
+
+  checkResult(moveIndex: number) {
+    if (moveIndex < this.roadLength) {
+      if (this._road[moveIndex] == BlockType.BT_NONE) {   //steps on empty block, reset to init.
+        this.#setCurState(GameState.GS_INIT);
+      }
+    } else {    //out of map, reset to init.
+      this.#setCurState(GameState.GS_INIT);
     }
   }
 }
