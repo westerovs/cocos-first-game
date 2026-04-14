@@ -23,7 +23,7 @@ export class PlayerController extends Component {
   // `_jumpTime`, прыжок считается завершённым
   private _curJumpTime: number = 0
   // время, необходимое игроку для одного прыжка
-  private _jumpTime: number = 0.3
+  private _jumpTime: number = 0.1
 
   // текущая вертикальная скорость игрока, используется для вычисления значения Y позиции во время прыжка
   private _curJumpSpeed: number = 0
