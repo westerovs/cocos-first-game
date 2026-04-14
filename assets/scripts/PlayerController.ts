@@ -34,24 +34,20 @@ export class PlayerController extends Component {
   // хранит конечную позицию игрока. когда прыжок завершается, используется напрямую, чтобы избежать накопления ошибок вычислений
   private _targetPos: Vec3 = new Vec3()
   //  для записи количества шагов, пройденных игроком.
-  private _curMoveIndex: number = 0;
-
-  start() {
-    // input.on(Input.EventType.MOUSE_UP, this.onMouseUp, this)
-  }
+  private _curMoveIndex: number = 0
 
   setInputActive(active: boolean) {
     if (active) {
-      input.on(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+      input.on(Input.EventType.MOUSE_UP, this.#onMouseUp, this)
     } else {
-      input.off(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+      input.off(Input.EventType.MOUSE_UP, this.#onMouseUp, this)
     }
   }
 
   reset() {
-    this._curMoveIndex = 0;
-    this.node.getPosition(this._curPos);
-    this._targetPos.set(0,0,0);
+    this._curMoveIndex = 0
+    this.node.getPosition(this._curPos)
+    this._targetPos.set(0, 0, 0)
   }
 
   update(deltaTime: number) {
@@ -66,7 +62,7 @@ export class PlayerController extends Component {
       this.node.setPosition(this._targetPos)
       // сбрасываем состояние прыжка
       this._startJump = false
-      this.onOnceJumpEnd()
+      this.#onOnceJumpEnd()
     }
     // [tween]
     else {
@@ -81,12 +77,12 @@ export class PlayerController extends Component {
     }
   }
 
-  onMouseUp(event: EventMouse) {
-    if (event.getButton() === EventMouse.BUTTON_LEFT) this.jumpByStep(1)
-    else if (event.getButton() === EventMouse.BUTTON_RIGHT) this.jumpByStep(2)
+  #onMouseUp(event: EventMouse) {
+    if (event.getButton() === EventMouse.BUTTON_LEFT) this.#jumpByStep(1)
+    else if (event.getButton() === EventMouse.BUTTON_RIGHT) this.#jumpByStep(2)
   }
 
-  jumpByStep(step: number) {
+  #jumpByStep(step: number) {
     if (this._startJump) return
 
     this._startJump = true // помечаем, что игрок начал прыжок
@@ -118,8 +114,8 @@ export class PlayerController extends Component {
     this._curMoveIndex += step
   }
 
-  onOnceJumpEnd() {
-    this.node.emit('JumpEnd', this._curMoveIndex);
+  #onOnceJumpEnd() {
+    this.node.emit('JumpEnd', this._curMoveIndex)
   }
 
   #setJumpTime = (step: number) => {

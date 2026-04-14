@@ -16,17 +16,15 @@ enum BlockType {
 
 @ccclass('GameManager')
 export class GameManager extends Component {
-  // References to the startMenu node.
-  @property({ type: Node })
-  public startMenu: Node | null = null;
+  @property({type: Node})
+  public startMenu: Node | null = null
 
-  //references to player
-  @property({ type: PlayerController })
-  public playerCtrl: PlayerController | null = null;
+  @property({type: PlayerController})
+  public playerController: PlayerController | null = null
 
   //references to UICanvas/Steps node.
   @property({type: Label})
-  public stepsLabel: Label|null = null;
+  public stepsLabel: Label | null = null
 
   @property({type: Prefab})
   public boxPrefab: Prefab | null = null
@@ -37,64 +35,65 @@ export class GameManager extends Component {
   private _road: BlockType[] = []
 
   start() {
+    ;(window as any).pc = this
+
     this.#setCurState(GameState.GS_INIT)
-    this.playerCtrl?.node.on('JumpEnd', this.onPlayerJumpEnd, this);
+    this.playerController?.node.on('JumpEnd', this.#onPlayerJumpEnd, this)
+  }
+
+  onStartButton(event: Event, data: string) {
+    console.log('click click', data)
+    this.#setCurState(GameState.GS_PLAYING)
   }
 
   #init() {
-    console.log('-------- init')
     //show the start menu
     if (this.startMenu) {
       this.startMenu.active = true
     }
 
     //generate the map
-    this.generateRoad()
+    this.#generateRoad()
 
-    if (this.playerCtrl) {
+    if (this.playerController) {
       //disable input
-      this.playerCtrl.setInputActive(false)
+      this.playerController.setInputActive(false)
 
       //reset player data.
-      this.playerCtrl.node.setPosition(Vec3.ZERO)
-      this.playerCtrl.reset()
+      this.playerController.node.setPosition(Vec3.ZERO)
+      this.playerController.reset()
     }
   }
 
-  #setCurState (value: GameState) {
-    switch(value) {
+  #setCurState(value: GameState) {
+    switch (value) {
       case GameState.GS_INIT:
         this.#init()
-        break;
+        break
       case GameState.GS_PLAYING:
         if (this.startMenu) {
-          this.startMenu.active = false;
+          this.startMenu.active = false
         }
 
         //reset steps counter to 0
         if (this.stepsLabel) {
-          this.stepsLabel.string = '0';
+          this.stepsLabel.string = '0'
         }
 
         //enable user input after 0.1 second.
         setTimeout(() => {
-          if (this.playerCtrl) {
-            this.playerCtrl.setInputActive(true);
+          if (this.playerController) {
+            this.playerController.setInputActive(true)
           }
-        }, 0.1);
-        break;
+        }, 0.1)
+        break
       case GameState.GS_END:
         console.log('GAME END')
-        break;
+        break
     }
   }
 
-  onStartButton(event: Event, data: string) {
-    console.log('click click', data)
-    this.#setCurState(GameState.GS_PLAYING);
-  }
-
-  generateRoad() {
+  #generateRoad() {
     this.node.removeAllChildren()
 
     this._road = []
@@ -110,7 +109,7 @@ export class GameManager extends Component {
     }
 
     for (let j = 0; j < this._road.length; j++) {
-      let block: Node | null = this.spawnBlockByType(this._road[j])
+      let block: Node | null = this.#spawnBlockByType(this._road[j])
       if (block) {
         this.node.addChild(block)
         block.setPosition(j * BLOCK_SIZE, 0, 0)
@@ -118,7 +117,7 @@ export class GameManager extends Component {
     }
   }
 
-  spawnBlockByType(type: BlockType) {
+  #spawnBlockByType(type: BlockType) {
     if (!this.boxPrefab) return null
 
     let block: Node | null = null
@@ -131,21 +130,21 @@ export class GameManager extends Component {
     return block
   }
 
-  onPlayerJumpEnd(moveIndex: number) {
+  #onPlayerJumpEnd(moveIndex: number) {
     //update steps label.
     if (this.stepsLabel) {
-      this.stepsLabel.string = '' + (moveIndex >= this.roadLength ? this.roadLength : moveIndex);
+      this.stepsLabel.string = '' + (moveIndex >= this.roadLength ? this.roadLength : moveIndex)
     }
-    this.checkResult(moveIndex);
+    this.#checkResult(moveIndex)
   }
 
-  checkResult(moveIndex: number) {
+  #checkResult(moveIndex: number) {
     if (moveIndex < this.roadLength) {
       if (this._road[moveIndex] == BlockType.BT_NONE) {   //steps on empty block, reset to init.
-        this.#setCurState(GameState.GS_INIT);
+        this.#setCurState(GameState.GS_INIT)
       }
     } else {    //out of map, reset to init.
-      this.#setCurState(GameState.GS_INIT);
+      this.#setCurState(GameState.GS_INIT)
     }
   }
 }
