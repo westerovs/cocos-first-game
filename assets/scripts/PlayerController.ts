@@ -124,11 +124,6 @@ export class PlayerController extends Component {
 
   #setJumpTime = (step: number) => {
     const clipName = (step == 1) ? 'oneStep' : 'twoStep'
-    console.group('↓---------clipName------↓')
-    console.log(step)
-    console.log(clipName)
-    console.log('↑---------------↑')
-    console.groupEnd()
     const state = this.BodyAnim.getState(clipName)
     this._jumpTime = state.duration
   }

@@ -14,8 +14,8 @@ enum BlockType {
   BT_STONE,
 }
 
-@ccclass('GameManger')
-export class GameManger extends Component {
+@ccclass('GameManager')
+export class GameManager extends Component {
   // References to the startMenu node.
   @property({ type: Node })
   public startMenu: Node | null = null;
