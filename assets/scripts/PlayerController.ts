@@ -92,6 +92,12 @@ export class PlayerController extends Component {
     this._startJump = true // помечаем, что игрок начал прыжок
     this._jumpStep = step // сохраняем количество шагов, которое должен пройти прыжок
     this._curJumpTime = 0 // сбрасываем таймер текущего прыжка
+
+    // get jump time from animation duration.
+    const clipName = step == 1 ? 'oneStep' : 'twoStep'
+    const state = this.BodyAnim.getState(clipName)
+    this._jumpTime = state.duration
+
     // т.к прыжок должен завершиться за фиксированное время (_jumpTime), рассчитываем вертикальную скорость прыжка
     this._curJumpSpeed = this._jumpStep * BLOCK_SIZE / this._jumpTime
     // сохраняем текущую позицию ноды - она будет использоваться в расчётах движения
