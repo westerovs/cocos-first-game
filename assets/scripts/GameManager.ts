@@ -16,19 +16,23 @@ enum BlockType {
 
 @ccclass('GameManager')
 export class GameManager extends Component {
+  // делает в классе публичное поле в которое нужно перетащить ноду
   @property({type: Node})
   public startMenu: Node | null = null
 
+  // принимает ноду Player
   @property({type: PlayerController})
   public playerController: PlayerController | null = null
 
-  //references to UICanvas/Steps node.
+  // принимает ноду step которая является счётчиком шагов
   @property({type: Label})
   public stepsLabel: Label | null = null
 
+  // принимает boxPrefab
   @property({type: Prefab})
   public boxPrefab: Prefab | null = null
 
+  // публичное поле длина дорожки с дефолтным значением. Означает ячеек(шагов) будет отрендерено
   @property({type: CCInteger})
   public roadLength: number = 50
 
@@ -41,13 +45,14 @@ export class GameManager extends Component {
     this.playerController?.node.on('JumpEnd', this.#onPlayerJumpEnd, this)
   }
 
+  // вызывается при клике на кнопку старт
   onStartButton(event: Event, data: string) {
     console.log('click click', data)
     this.#setCurState(GameState.GS_PLAYING)
   }
 
   #init() {
-    //show the start menu
+    //show the startMenu
     if (this.startMenu) {
       this.startMenu.active = true
     }
@@ -88,7 +93,7 @@ export class GameManager extends Component {
         }, 0.1)
         break
       case GameState.GS_END:
-        console.log('GAME END')
+        console.log('------------- GAME END')
         break
     }
   }
